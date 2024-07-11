@@ -138,7 +138,6 @@
     flex-direction: column;
     width: 100%;
   }
-
   .header {
     display: flex;
     justify-content: space-between;
@@ -169,12 +168,47 @@
     display: flex;
     overflow: hidden;
   }
-
   .messages-area {
     flex: 1;
     padding: 1rem;
+    overflow-y: auto;
   }
 
+  .messages-area ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .messages-area li {
+    margin-bottom: 10px;
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 10px;
+    clear: both;
+  }
+
+  .sent {
+    float: right;
+    background-color: #dcf8c6;
+    text-align: right;
+  }
+
+  .received {
+    float: left;
+    background-color: #f1f0f0;
+  }
+
+  .join-message {
+    text-align: center;
+    background-color: #e1e1e1;
+    color: #666;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    margin: 10px auto;
+    max-width: 60%;
+    clear: both;
+  }
   .side-panel {
     width: 200px;
     background-color: #fff;
@@ -259,9 +293,13 @@
     <div class="messages-area">
       <ul>
         {#each messages as msg}
-        <li class={msg.type === 'join' ? 'join-message' : msg.userId === username ? 'sent' : 'received'}>
-          {msg.userId}: {msg.content}
-        </li>
+          {#if msg.type === 'join'}
+            <li class="join-message">{msg.content}</li>
+          {:else}
+            <li class={msg.userId === username ? 'sent' : 'received'}>
+              <strong>{msg.userId}:</strong> {msg.content}
+            </li>
+          {/if}
         {/each}
       </ul>
     </div>
