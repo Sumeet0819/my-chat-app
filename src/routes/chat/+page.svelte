@@ -1,6 +1,6 @@
 <!-- src/routes/chat/+page.svelte -->
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { database } from '$lib/firebase';
   import { ref, onChildAdded, push, serverTimestamp, remove, onDisconnect, onValue, set, get } from 'firebase/database';
 
@@ -11,244 +11,235 @@
   let roomId = '';
 
   onMount(async () => {
-    username = localStorage.getItem('chatUsername') || 'Guest';
-    roomId = new URLSearchParams(window.location.search).get('room') || localStorage.getItem('chatRoomId');
-    
+    username = sessionStorage.getItem('chatUsername') || 'Guest';
+    roomId = new URLSearchParams(window.location.search).get('room') || sessionStorage.getItem('chatRoomId');
+
     const messagesRef = ref(database, `rooms/${roomId}/messages`);
     const usersRef = ref(database, `rooms/${roomId}/users`);
     const roomRef = ref(database, `rooms/${roomId}`);
     const roomCreationRef = ref(database, `rooms/${roomId}/createdAt`);
 
-    // Check if the room exists and create it if not
-    const roomSnapshot = await get(roomRef);
-    if (!roomSnapshot.exists()) {
-      await set(roomCreationRef, serverTimestamp());
-    }
-
-    // Schedule room deletion after 24 hours
-    onDisconnect(roomRef).remove();
-
-    const hasJoined = sessionStorage.getItem('hasJoined');
-
-    if (!hasJoined) {
-      sendJoinMessage();
-      sessionStorage.setItem('hasJoined', 'true');
-    }
-
-    // Add user to the list
-    const userRef = ref(database, `rooms/${roomId}/users/${username}`);
-    set(userRef, { username, online: true });
-
-    // Handle user disconnect
-    onDisconnect(userRef).set({ username, online: false });
-
-    // Listen for new messages
-    onChildAdded(messagesRef, (snapshot) => {
-      const messageData = snapshot.val();
-      messages = [...messages, messageData];
-    });
-
-    // Listen for user list updates
-    onValue(usersRef, (snapshot) => {
-      users = [];
-      snapshot.forEach((userSnapshot) => {
-        const user = userSnapshot.val();
-        if (user.online) {
-          users = [...users, user];
-        }
-      });
-    });
-
-    // Check for room deletion every minute
-    setInterval(async () => {
-      const roomCreationSnapshot = await get(roomCreationRef);
-      const creationTime = roomCreationSnapshot.val();
-      const currentTime = Date.now();
-      if (currentTime - creationTime >= 24 * 60 * 60 * 1000) { // 24 hours in milliseconds
-        await remove(roomRef);
+    try {
+      const roomSnapshot = await get(roomRef);
+      if (!roomSnapshot.exists()) {
+        await set(roomCreationRef, serverTimestamp());
       }
-    }, 60 * 1000); // Check every minute
-  });
 
+      onDisconnect(roomRef).remove();
+
+      const hasJoined = sessionStorage.getItem('hasJoined');
+
+      if (!hasJoined) {
+        await sendJoinMessage();
+        sessionStorage.setItem('hasJoined', 'true');
+      }
+
+      const userRef = ref(database, `rooms/${roomId}/users/${username}`);
+      await set(userRef, { username, online: true });
+
+      onDisconnect(userRef).set({ username, online: false });
+
+      onChildAdded(messagesRef, (snapshot) => {
+        const messageData = snapshot.val();
+        messages = [...messages, messageData];
+      });
+
+      onValue(usersRef, (snapshot) => {
+        users = [];
+        snapshot.forEach((userSnapshot) => {
+          const user = userSnapshot.val();
+          if (user.online) {
+            users = [...users, user];
+          }
+        });
+      });
+
+    } catch (error) {
+      console.error("Error in chat initialization:", error);
+    }
+  });
   const sendMessage = async () => {
     if (message.trim() !== '') {
-      const messagesRef = ref(database, `rooms/${roomId}/messages`);
-      await push(messagesRef, {
-        content: message,
-        userId: username,
-        type: 'message',
-        createdAt: serverTimestamp(),
-        sent: true
-      });
-      message = '';
+      try {
+        const messagesRef = ref(database, `rooms/${roomId}/messages`);
+        await push(messagesRef, {
+          content: message,
+          userId: username,
+          type: 'message',
+          createdAt: serverTimestamp(),
+          sent: true
+        });
+        message = '';
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
     }
   };
 
   const sendJoinMessage = async () => {
-    const messagesRef = ref(database, `rooms/${roomId}/messages`);
-    await push(messagesRef, {
-      content: `${username} has joined the chat`,
-      userId: username,
-      type: 'join',
-      createdAt: serverTimestamp()
-    });
+    try {
+      const messagesRef = ref(database, `rooms/${roomId}/messages`);
+      await push(messagesRef, {
+        content: `${username} has joined the chat`,
+        userId: username,
+        type: 'join',
+        createdAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Error sending join message:", error);
+    }
   };
 
   const clearMessages = async () => {
-    const messagesRef = ref(database, `rooms/${roomId}/messages`);
-    await remove(messagesRef);
-    messages = [];
+    try {
+      const messagesRef = ref(database, `rooms/${roomId}/messages`);
+      await remove(messagesRef);
+      messages = [];
+    } catch (error) {
+      console.error("Error clearing messages:", error);
+    }
   };
 
   function copyRoomId() {
-    navigator.clipboard.writeText(roomId)
-      .then(() => alert('Room ID copied to clipboard!'))
-      .catch(err => console.error('Failed to copy: ', err));
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(roomId)
+        .then(() => alert('Room ID copied to clipboard!'))
+        .catch(err => console.error('Failed to copy: ', err));
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = roomId;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert('Room ID copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+      }
+      document.body.removeChild(textArea);
+    }
   }
 </script>
 
+<svelte:head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</svelte:head>
+
 <style>
+  * {
+    box-sizing: border-box;
+  }
+
   .chat-container {
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    font-family: Arial, sans-serif;
   }
-  
+
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    background-color: #2c3e50;
+    padding: 1rem;
+    background-color: #333;
     color: white;
   }
-  
+
   .room-name {
-    font-size: 1.2em;
-    font-weight: bold;
+    font-size: 1.5rem;
   }
-  
+
   .controls {
     display: flex;
-    gap: 15px;
+    gap: 1rem;
   }
-  
-  .controls span, .controls button {
-    cursor: pointer;
-  }
-  
-  .main-content {
+
+  .room-id-display {
+    padding: 1rem;
+    background-color: #f4f4f4;
     display: flex;
+    justify-content: space-between;
+  }
+
+  .main-content {
     flex: 1;
+    display: flex;
     overflow: hidden;
   }
-  
+
   .messages-area {
     flex: 1;
+    padding: 1rem;
     overflow-y: auto;
-    padding: 20px;
   }
-  
-  .messages-area ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .messages-area li {
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    max-width: 70%;
-    border-radius: 8px;
-    clear: both;
-  }
-  
-  .messages-area li.sent {
-    float: right;
-    background-color: #3498db;
-    color: white;
-    border-bottom-right-radius: 0;
-  }
-  
-  .messages-area li.received {
-    float: left;
-    background-color: #f1f1f1;
-    color: black;
-    border-bottom-left-radius: 0;
-  }
-  
-  .join-message {
-    font-style: italic;
-    color: #666;
-    text-align: center;
-    clear: both;
-    float: none;
-    max-width: 100%;
-    background-color: transparent;
-  }
-  
+
   .side-panel {
     width: 200px;
-    background-color: #f8f9fa;
-    padding: 20px;
+    background-color: #f4f4f4;
+    padding: 1rem;
     overflow-y: auto;
   }
-  
+
   .participants-header {
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 1rem;
   }
-  
+
   .user-list {
-    list-style-type: none;
+    list-style: none;
     padding: 0;
   }
-  
+
   .user-item {
-    margin-bottom: 5px;
+    padding: 0.5rem 0;
+    display: flex;
+    align-items: center;
   }
-  
-  .online, .offline {
-    display: inline-block;
+
+  .online {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    margin-right: 5px;
+    background-color: green;
+    margin-right: 0.5rem;
   }
-  
-  .online {
-    background-color: #2ecc71;
-  }
-  
+
   .offline {
-    background-color: #95a5a6;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: red;
+    margin-right: 0.5rem;
   }
-  
+
   .message-input {
     display: flex;
-    padding: 20px;
-    background-color: #ecf0f1;
+    padding: 1rem;
+    background-color: #f4f4f4;
   }
-  
+
   .message-input input {
     flex: 1;
-    padding: 10px;
-    border: 1px solid #bdc3c7;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
     border-radius: 4px;
   }
-  
+
   .send-button {
-    padding: 10px 20px;
-    background-color: #3498db;
-    color: white;
+    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 4px;
-    margin-left: 10px;
+    background-color: #333;
+    color: white;
+    margin-left: 0.5rem;
     cursor: pointer;
+    border-radius: 4px;
   }
-  
-  .send-button:hover {
-    background-color: #2980b9;
+
+  @media screen and (max-width: 600px) {
+    .side-panel {
+      display: none;
+    }
   }
 </style>
 
@@ -289,7 +280,7 @@
     </div>
   </div>
   <div class="message-input">
-    <input type="text" placeholder="Type your message here" bind:value={message} />
+    <input type="text" placeholder="Type your message here" bind:value={message} on:keypress={(e) => e.key === 'Enter' && sendMessage()} />
     <button on:click={sendMessage} class="send-button">Send</button>
   </div>
 </div>
