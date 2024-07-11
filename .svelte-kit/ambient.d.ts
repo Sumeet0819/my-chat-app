@@ -41,8 +41,6 @@ declare module '$env/static/private' {
 	export const EDITOR: string;
 	export const EFC_11460: string;
 	export const EnableLog: string;
-	export const FPS_BROWSER_APP_PROFILE_STRING: string;
-	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
 	export const GIT_LFS_PATH: string;
 	export const HOME: string;
@@ -78,8 +76,7 @@ declare module '$env/static/private' {
 	export const npm_package_json: string;
 	export const npm_package_name: string;
 	export const npm_package_version: string;
-	export const NPM_PREFIX_NPX_CLI_JS: string;
-	export const NPX_CLI_JS: string;
+	export const NPM_PREFIX_NPM_CLI_JS: string;
 	export const NUMBER_OF_PROCESSORS: string;
 	export const OneDrive: string;
 	export const OneDriveConsumer: string;
@@ -164,8 +161,6 @@ declare module '$env/dynamic/private' {
 		EDITOR: string;
 		EFC_11460: string;
 		EnableLog: string;
-		FPS_BROWSER_APP_PROFILE_STRING: string;
-		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
 		GIT_LFS_PATH: string;
 		HOME: string;
@@ -201,8 +196,7 @@ declare module '$env/dynamic/private' {
 		npm_package_json: string;
 		npm_package_name: string;
 		npm_package_version: string;
-		NPM_PREFIX_NPX_CLI_JS: string;
-		NPX_CLI_JS: string;
+		NPM_PREFIX_NPM_CLI_JS: string;
 		NUMBER_OF_PROCESSORS: string;
 		OneDrive: string;
 		OneDriveConsumer: string;

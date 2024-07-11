@@ -74,29 +74,50 @@
 </script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-
-  :global(body) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
+   @import url("https://cdn.jsdelivr.net/npm/@xz/fonts@1/serve/plus-jakarta-display.min.css");
+  @import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap");
+  @import url("https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap");
+  @import url("https://fonts.cdnfonts.com/css/cascadia-code");
+  * {
     margin: 0;
-    font-family: 'Inter', sans-serif;
-    background-color: #f0f0f0;
+    padding: 0;
+    font-family: "Plus Jakarta Display", sans-serif, "Noto Color Emoji";
+  } 
+  :global(body){
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
-
+  main {
+      display: block;
+      align-items: center;
+      padding: 50px 20px;
+  }
+  
+  .intro {
+      text-align: center;
+      max-width: 100%;
+  }
+  
+  .intro h1 {
+      font-size: 3em;
+      color: #aa0ca5;
+  }
+  
+  .intro p {
+      margin: 10px 0;
+  }
   .join-container {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: centerax;
     padding: 2rem;
-    border: 1px solid #ccc;
     border-radius: 10px;
     background-color: #fff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 300px;
+    max-width: 500px;
   }
 
   h1 {
@@ -112,7 +133,7 @@
   input {
     padding: 0.75rem;
     margin-bottom: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid #dc6ad9;
     border-radius: 5px;
     font-size: 1rem;
     width: 100%;
@@ -122,7 +143,7 @@
   button {
     padding: 0.75rem;
     border: none;
-    background-color: #007bff;
+    background-color: #aa0ca5;
     color: #fff;
     border-radius: 5px;
     cursor: pointer;
@@ -138,19 +159,34 @@
 
   .toggle-mode {
     margin-top: 1rem;
-    color: #007bff;
+    padding: 0.75rem;
+    border: none;
+    background-color: #aa0ca5;
+    color: #fff;
+    border-radius: 5px;
     cursor: pointer;
-    text-decoration: underline;
+    font-size: 1rem;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 1rem;
   }
 
   .error-message {
     color: #d32f2f;
     margin-top: 0.75rem;
     font-size: 0.875rem;
-  }
+  } 
 </style>
-
+<section class="intro">
+  <h1>Disposable Chatroom</h1>
+  <p>Chat private. Chat free.</p>
+  <p>
+      Create your own Disposable Chatroom. It disposes after the last person
+      leaves.
+  </p>
+</section>
 <div class="join-container">
+
   <h1>{isCreatingRoom ? 'Create' : 'Join'} Chat Room</h1>
   <form on:submit={joinOrCreateChat}>
     <input
@@ -176,4 +212,18 @@
   <div class="toggle-mode" on:click={toggleMode}>
     {isCreatingRoom ? 'Join an existing room' : 'Create a new room'}
   </div>
+
+</div>
+<div class="instructions">
+  <p><strong>Remember:</strong></p>
+  <ol>
+      <li>
+          This is a Disposable Chatroom. Nothing is saved and it's encrypted
+          too.
+      </li>
+      <li>
+          Invite anyone to this chatroom by sharing the Unique Code provided.        
+      </li>
+      <li>Enjoy!</li>
+  </ol>
 </div>

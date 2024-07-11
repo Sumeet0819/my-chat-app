@@ -121,18 +121,19 @@
   }
 </script>
 
-<svelte:head>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-</svelte:head>
-
 <style>
+   @import url("https://cdn.jsdelivr.net/npm/@xz/fonts@1/serve/plus-jakarta-display.min.css");
+  @import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap");
+  @import url("https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap");
+  @import url("https://fonts.cdnfonts.com/css/cascadia-code");
   * {
-    box-sizing: border-box;
-  }
-
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    font-family: "Plus Jakarta Display", sans-serif, "Noto Color Emoji";
+  } 
   .chat-container {
     height: 100vh;
-    height: calc(var(--vh, 1vh) * 100);
     display: flex;
     flex-direction: column;
   }
@@ -142,7 +143,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    background-color: #333;
+    background-color: #aa0ca5;
     color: white;
   }
 
@@ -157,7 +158,7 @@
 
   .room-id-display {
     padding: 1rem;
-    background-color: #f4f4f4;
+    background-color: #fff;
     display: flex;
     justify-content: space-between;
   }
@@ -171,14 +172,12 @@
   .messages-area {
     flex: 1;
     padding: 1rem;
-    overflow-y: auto;
   }
 
   .side-panel {
     width: 200px;
-    background-color: #f4f4f4;
+    background-color: #fff;
     padding: 1rem;
-    overflow-y: auto;
   }
 
   .participants-header {
@@ -216,9 +215,8 @@
   .message-input {
     display: flex;
     padding: 1rem;
-    background-color: #f4f4f4;
+    background-color: #fff;
   }
-
   .message-input input {
     flex: 1;
     padding: 0.5rem;
@@ -229,17 +227,15 @@
   .send-button {
     padding: 0.5rem 1rem;
     border: none;
-    background-color: #333;
+    background-color: #1d78ce;
     color: white;
     margin-left: 0.5rem;
     cursor: pointer;
     border-radius: 4px;
   }
-
-  @media screen and (max-width: 600px) {
-    .side-panel {
-      display: none;
-    }
+  .send-button:hover{
+    background-color: #07bbd3;
+    scale: 1.2;
   }
 </style>
 
