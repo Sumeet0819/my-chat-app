@@ -1,6 +1,6 @@
-<!-- src/routes/chat/+page.svelte -->
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { database } from '$lib/firebase';
   import { ref, onChildAdded, push, serverTimestamp, remove, onDisconnect, onValue, set, get } from 'firebase/database';
 
@@ -9,10 +9,16 @@
   let username = '';
   let users = [];
   let roomId = '';
+  let timeLeft = '';
 
   onMount(async () => {
     username = sessionStorage.getItem('chatUsername') || 'Guest';
     roomId = new URLSearchParams(window.location.search).get('room') || sessionStorage.getItem('chatRoomId');
+
+    if (!roomId) {
+      roomId = `room-${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem('chatRoomId', roomId);
+    }
 
     const messagesRef = ref(database, `rooms/${roomId}/messages`);
     const usersRef = ref(database, `rooms/${roomId}/users`);
@@ -58,6 +64,7 @@
       console.error("Error in chat initialization:", error);
     }
   });
+
   const sendMessage = async () => {
     if (message.trim() !== '') {
       try {
@@ -100,7 +107,18 @@
     }
   };
 
-  function copyRoomId() {
+  const deleteChatRoom = async () => {
+    try {
+      const roomRef = ref(database, `rooms/${roomId}`);
+      await remove(roomRef);
+      alert('Chat room has been deleted.');
+      goto(`/`); // Redirect to create room page
+    } catch (error) {
+      console.error("Error deleting chat room:", error);
+    }
+  };
+
+  const copyRoomId = () => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(roomId)
         .then(() => alert('Room ID copied to clipboard!'))
@@ -118,18 +136,39 @@
       }
       document.body.removeChild(textArea);
     }
-  }
+  };
+
+  const startCountdown = (deletionTime) => {
+    const updateCountdown = () => {
+      const now = Date.now();
+      const distance = deletionTime - now;
+
+      if (distance < 0) {
+        timeLeft = 'Expired';
+        clearInterval(countdownInterval);
+      } else {
+        const hours = Math.floor((distance % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+        const minutes = Math.floor((distance % (60 * 60 * 1000)) / (60 * 1000));
+        const seconds = Math.floor((distance % (60 * 1000)) / 1000);
+
+        timeLeft = `${hours}h ${minutes}m ${seconds}s`;
+      }
+    };
+
+    updateCountdown();
+    const countdownInterval = setInterval(updateCountdown, 1000);
+  };
 </script>
 
 <style>
-   @import url("https://cdn.jsdelivr.net/npm/@xz/fonts@1/serve/plus-jakarta-display.min.css");
+  @import url("https://cdn.jsdelivr.net/npm/@xz/fonts@1/serve/plus-jakarta-display.min.css");
   @import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap");
   @import url("https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap");
   @import url("https://fonts.cdnfonts.com/css/cascadia-code");
   * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     font-family: "Plus Jakarta Display", sans-serif, "Noto Color Emoji";
   } 
   .chat-container {
@@ -146,7 +185,10 @@
     background-color: #aa0ca5;
     color: white;
   }
-
+  .time-left {
+    font-size: 1rem;
+    font-weight: bold;
+  }
   .room-name {
     font-size: 1.5rem;
   }
@@ -162,7 +204,14 @@
     display: flex;
     justify-content: space-between;
   }
-
+  .room-id-display button{
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.667);
+    color: #fff;
+    cursor: pointer;
+  }
   .main-content {
     flex: 1;
     display: flex;
@@ -258,7 +307,6 @@
     border: 1px solid #ccc;
     border-radius: 4px;
   }
-
   .send-button {
     padding: 0.5rem 1rem;
     border: none;
@@ -268,9 +316,17 @@
     cursor: pointer;
     border-radius: 4px;
   }
-  .send-button:hover{
+  .send-button:hover {
     background-color: #07bbd3;
     scale: 1.2;
+  }
+  .delete-button {
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background-color: rgba(247, 0, 0, 0.667);
+    color: #fff;
+    cursor: pointer;
   }
 </style>
 
@@ -278,9 +334,7 @@
   <div class="header">
     <div class="room-name">DialogueDen - A Chat Room</div>
     <div class="controls">
-      <span class="theme-toggle"><i class="fas fa-sun"></i></span>
-      <span class="leave-room"><i class="fas fa-sign-out-alt"></i></span>
-      <button on:click={clearMessages}>Clear Messages</button>
+      <button on:click={deleteChatRoom} class="delete-button">Delete Room</button>
     </div>
   </div>
   
